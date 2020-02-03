@@ -10,9 +10,6 @@ env = gym.make('LunarLanderContinuous-v2')
 RANDOM_SEED = 123
 NUM_EPISODES = 50
 
-if sys.argv[1] != "":
-    NUM_EPISODES = int(sys.argv[1])
-
 # Set seeds for reproducability
 random.seed(RANDOM_SEED)  
 env.seed(RANDOM_SEED)  

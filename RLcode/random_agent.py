@@ -3,19 +3,8 @@ import random
 import numpy as np
 import sys
 
-# Initialize the environment
-env = gym.make('LunarLanderContinuous-v2')  
 
-# Define hyperparameters
-RANDOM_SEED = 123
-NUM_EPISODES = 50
-
-# Set seeds for reproducability
-random.seed(RANDOM_SEED)  
-env.seed(RANDOM_SEED)  
-np.random.seed(RANDOM_SEED)
-
-def get_action(observation):
+def get_action(env, observation):
     '''
     Function that takes random actions
     Arguments:
@@ -23,6 +12,7 @@ def get_action(observation):
     Returns:
         randomly chosen action (array of 2 floats)
     '''
+    
     return env.action_space.sample()
 
 if __name__=="__main__":

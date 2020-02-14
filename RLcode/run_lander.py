@@ -111,26 +111,56 @@ if __name__=="__main__":
                         'sample_log_std':-2.0
                         }
 
+    hyperparam_nn = {
+                        'name': 'nn', 'gamma':0.95, 'poly_degree':1,
+                        'learning_rate':5e-3, 'state_size':state_size,
+                        'num_actions':num_actions, 'activation_function': torch.tanh,
+                        'sample_function': sample_distribution.gaussian_policy,
+                        'sample_log_std':-2.0
+                        }
+
     random_policy = random_agent.get_action
     linear_fa_policy = linear_policy.linear_fa_policy(**hyperparam_linFA)
+    nn_policy_instance = nn_policy.nn_policy_func(**hyperparam_nn)
     
 
     if len(sys.argv) > 1:
+        # try:
+        #     model_file = sys.argv[2]
+        #     saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
+        #
+        #     ep_rewds, run_rewds = train_lunar_lander(env, policy=saved_policy,
+        #                         hyperparams=hyperparam_linFA,
+        #                         feature_function=linear_policy.poly_feature,
+        #                         render = False, log_interval = 10,
+        #                         max_episodes=int(sys.argv[1]),
+        #                         max_steps=8000)
+        #
+        # except IndexError:
+        #     ep_rewds, run_rewds = train_lunar_lander(env, policy=linear_fa_policy,
+        #                         hyperparams=hyperparam_linFA,
+        #                         feature_function=linear_policy.poly_feature,
+        #                         render = False, log_interval = 10,
+        #                         max_episodes=int(sys.argv[1]))
+
+
         try:
             model_file = sys.argv[2]
-            saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
+            saved_policy = nn_policy_instance.load(hyperparam_nn, model_file)
 
-            ep_rewds, run_rewds = train_lunar_lander(env, hyperparams=hyperparam_linFA,
-                                feature_function=linear_policy.poly_feature,
-                                render = False, log_interval = 10,
-                                max_episodes=int(sys.argv[1]), policy=saved_policy,
-                                max_steps=8000)
-    
+            ep_rewds, run_rewds = train_lunar_lander(env, policy=saved_policy,
+                                                     hyperparams=hyperparam_nn,
+                                                     feature_function=nn_policy.dummy_feature,
+                                                     render = False, log_interval = 10,
+                                                     max_episodes=int(sys.argv[1]),
+                                                     max_steps=8000)
+
         except IndexError:
-            ep_rewds, run_rewds = train_lunar_lander(env, hyperparams=hyperparam_linFA,
-                                feature_function=linear_policy.poly_feature,
-                                render = False, log_interval = 10,
-                                max_episodes=int(sys.argv[1]), policy=linear_fa_policy)
+            ep_rewds, run_rewds = train_lunar_lander(env, policy=nn_policy_instance,
+                                                     hyperparams=hyperparam_nn,
+                                                     feature_function=nn_policy.dummy_feature,
+                                                     render = False, log_interval = 10,
+                                                     max_episodes=int(sys.argv[1]))
     
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)

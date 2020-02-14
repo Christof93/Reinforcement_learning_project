@@ -119,14 +119,17 @@ if __name__=="__main__":
         try:
             model_file = sys.argv[2]
             saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
-            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
+            ep_rewds, run_rewds = train_lunar_lander(env, hyperparams=hyperparam_linFA,
+                                feature_function=linear_policy.poly_feature,
+                                render = False, log_interval = 10,
                                 max_episodes=int(sys.argv[1]), policy=saved_policy,
-                                max_steps=8000, hyperparams=hyperparam_linFA)
+                                max_steps=8000)
     
         except IndexError:
-            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
-                                max_episodes=int(sys.argv[1]), policy=linear_fa_policy, 
-                                hyperparams=hyperparam_linFA)
+            ep_rewds, run_rewds = train_lunar_lander(env, hyperparams=hyperparam_linFA,
+                                feature_function=linear_policy.poly_feature,
+                                render = False, log_interval = 10,
+                                max_episodes=int(sys.argv[1]), policy=linear_fa_policy)
     
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)

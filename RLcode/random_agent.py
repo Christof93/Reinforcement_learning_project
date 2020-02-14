@@ -23,6 +23,8 @@ if __name__=="__main__":
         episode_reward = 0
         while True:
             action = get_action(observation)
+            print(action)
+            print(type(action))
             observation, reward, done, info = env.step(action)
             # You can comment the below line for faster execution
             env.render()

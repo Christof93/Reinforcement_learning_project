@@ -6,7 +6,8 @@ import gym
 import sys
 import random
 import numpy as np
-
+import sample_distribution
+import torch
  
 
 def make_observation(env):
@@ -38,7 +39,7 @@ def run_random_lander(env, num_episodes, policy_function):
         observation = env.reset()
         episode_reward = 0
         while True:
-            action = policy_function(observation)
+            action = policy_function(env, observation)
             observation, reward, done, info = env.step(action)
             # You can comment the below line for faster execution
             env.render()
@@ -63,13 +64,27 @@ if __name__=="__main__":
 
     ## choose a policy
     state_size = env.observation_space.sample().shape[0]
-    hyperparam_linFA = {'name': 'linearFA', 'gamma':0.9, 'poly_degree':1, 'learning_rate':5e-3, 'state_size':state_size}
+    num_actions = env.action_space.sample().shape[0]
+    hyperparam_linFA = {
+                        'name': 'linearFA', 'gamma':0.9, 'poly_degree':3, 
+                        'learning_rate':5e-3, 'state_size':state_size,
+                        'num_actions':num_actions, 'activation_function': torch.tanh,
+                        'sample_function': sample_distribution.gaussian_policy
+                        'sample_log_std':-0.5, 'max_steps':8000
+                        }
 
     random_policy = random_agent.get_action
     linear_fa_policy = linear_policy.linear_fa_policy(**hyperparam_linFA)
     
 
     if len(sys.argv) > 1:
-        train_lunar_lander(env, render = True, log_interval = 1, max_episodes=int(sys.argv[1]), policy=linear_fa_policy, hyperparams=hyperparam_linFA)
+        try:
+            model_file = sys.argv[2]
+            saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
+            train_lunar_lander(env, render = False, log_interval = 1, max_episodes=int(sys.argv[1]), policy=saved_policy, hyperparams=hyperparam_linFA)
+    
+        except KeyError:
+            train_lunar_lander(env, render = True, log_interval = 1, max_episodes=int(sys.argv[1]), policy=linear_fa_policy, hyperparams=hyperparam_linFA)
+    
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)

@@ -50,7 +50,7 @@ def finish_episode(policy, optimizer, gamma):
     del policy.saved_log_probs[:]
 
 
-def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 100, max_episodes=3000):
+def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 100, max_episodes=3000, max_steps=10000):
     # To track the reward across consecutive episodes (smoothed)
     running_reward = 1.0
     optimizer = optim.Adam(policy.parameters(), lr=hyperparams["learning_rate"])
@@ -65,13 +65,12 @@ def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 10
         # Reset the environment
         state, ep_reward = env.reset(), 0
         # For each step of the episode
-        for t in range(1, 10000):  
+        for t in range(1, max_steps):  
             feature_vector = poly_feature(state,hyperparams["poly_degree"])
 
             # Select an action using the policy network
             action = policy.select_action(feature_vector)
             action = np.array(action[0])
-            #input("")
             # Perform the action and note the next state and reward
             state, reward, done, _ = env.step(action)
             if render:

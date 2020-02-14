@@ -29,14 +29,14 @@ def make_observation(env):
        print(env.action_space.sample())
 
 def save_results(hyperparams, ep_rewards, running_rewards):
-    with open("results/"+datetime.now()[:-5]+"training_results.txt", "w") as outfile:
+    with open("results/"+str(datetime.datetime.now())[:-7]+"training_results.txt", "w") as outfile:
         hyperparams_string = ""
         for param,val in hyperparams.items():
             hyperparams_string+=param+" -> "+str(val)+"\n"
         outfile.write(hyperparams_string)
-    outfile.write("\nEpisode rewards:\n-------------")
-    for i,(ep_rep, ru_rep) in enumerate(zip(ep_rewards, running_rewards)):
-        outfile.write("Episode "+i+" rewards: "+ep_rep, ru_rep)
+        outfile.write("\nEpisode rewards:\n-------------\n")
+        for i,(ep_rep, ru_rep) in enumerate(zip(ep_rewards, running_rewards)):
+            outfile.write("Episode "+str(i)+" rewards: "+str(ep_rep)+"   "+ str(ru_rep)+"\n")
             
 def save_plots(ep_rewards, running_rewards):
     fig, ax = plt.subplots(3,1, figsize=(24,18))
@@ -108,7 +108,7 @@ if __name__=="__main__":
                         'learning_rate':5e-3, 'state_size':state_size,
                         'num_actions':num_actions, 'activation_function': torch.tanh,
                         'sample_function': sample_distribution.gaussian_policy,
-                        'sample_log_std':-1.5
+                        'sample_log_std':-2.0
                         }
 
     random_policy = random_agent.get_action
@@ -119,7 +119,7 @@ if __name__=="__main__":
         try:
             model_file = sys.argv[2]
             saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
-            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
+            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 1, 
                                 max_episodes=int(sys.argv[1]), policy=saved_policy,
                                 max_steps=8000, hyperparams=hyperparam_linFA)
     

@@ -66,7 +66,7 @@ def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 10
         state, ep_reward = env.reset(), 0
         # For each step of the episode
         for t in range(1, max_steps):  
-            feature_vector = poly_feature(state,hyperparams["poly_degree"])
+            feature_vector = poly_feature(state, hyperparams["poly_degree"])
 
             # Select an action using the policy network
             action = policy.select_action(feature_vector)

@@ -8,6 +8,7 @@ import random
 import numpy as np
 import sample_distribution
 import torch
+import datetime
  
 
 def make_observation(env):
@@ -27,7 +28,44 @@ def make_observation(env):
     for i in range(5):
        print(env.action_space.sample())
 
-
+def save_results(hyperparams, ep_rewards, running_rewards):
+    with open("results/"+datetime.now()[:-5]+"training_results.txt", "w") as outfile:
+        hyperparams_string = ""
+        for param,val in hyperparams.items():
+            hyperparams_string+=param+" -> "+str(val)+"\n"
+        outfile.write(hyperparams_string)
+    outfile.write("\nEpisode rewards:\n-------------")
+    for i,(ep_rep, ru_rep) in enumerate(zip(ep_rewards, running_rewards)):
+        outfile.write("Episode "+i+" rewards: "+ep_rep, ru_rep)
+            
+def save_plots(ep_rewards, running_rewards):
+    fig, ax = plt.subplots(3,1, figsize=(24,18))
+    ax[0].plot(range(len(ep_rewards)), ep_rewards, color='#b39bc8', lw=2, label='episode rewards')
+    ax[0].plot(range(len(running_rewards)), running_rewards, color='#a00000', lw=2, label='running rewards')
+    ax[0].set_xlabel('Episode')
+    ax[0].set_ylabel('Cumulative reward')
+    ax[0].set_title('Learned Agent', fontsize=16)
+    ax[0].legend()
+    ax[0].grid()
+    
+    ax[1].plot(range(len(random_ep_rewards)), random_ep_rewards, color='#7ed9d9', lw=2, label='episode rewards')
+    ax[1].plot(range(len(random_running_rewards)), random_running_rewards, color='#133264', lw=2, label='running rewards')
+    ax[1].set_xlabel('Episode')
+    ax[1].set_ylabel('Cumulative reward')
+    ax[1].set_title('Random Agent', fontsize=16)
+    ax[1].legend()
+    ax[1].grid()
+    
+    ax[2].plot(range(len(running_rewards)), running_rewards, color='#a00000', lw=2, label='learned agent running rewards')
+    ax[2].plot(range(len(random_running_rewards)), random_running_rewards, color='#133264', lw=2, label='random agent running rewards')
+    ax[2].set_xlabel('Episode')
+    ax[2].set_ylabel('Cumulative reward')
+    ax[2].set_title('Comparison between Learned and Random Agent', fontsize=16)
+    ax[2].legend()
+    ax[2].grid()
+    
+    plt.show()
+    
 def run_random_lander(env, num_episodes, policy_function):
     """
     runs the lunar lander environment for a specific number of episodes 
@@ -66,11 +104,11 @@ if __name__=="__main__":
     state_size = env.observation_space.sample().shape[0]
     num_actions = env.action_space.sample().shape[0]
     hyperparam_linFA = {
-                        'name': 'linearFA', 'gamma':0.9, 'poly_degree':3, 
+                        'name': 'linearFA', 'gamma':0.95, 'poly_degree':1, 
                         'learning_rate':5e-3, 'state_size':state_size,
                         'num_actions':num_actions, 'activation_function': torch.tanh,
-                        'sample_function': sample_distribution.gaussian_policy
-                        'sample_log_std':-0.5, 'max_steps':8000
+                        'sample_function': sample_distribution.gaussian_policy,
+                        'sample_log_std':-1.5
                         }
 
     random_policy = random_agent.get_action
@@ -81,10 +119,16 @@ if __name__=="__main__":
         try:
             model_file = sys.argv[2]
             saved_policy = linear_fa_policy.load(hyperparam_linFA, model_file)
-            train_lunar_lander(env, render = False, log_interval = 1, max_episodes=int(sys.argv[1]), policy=saved_policy, hyperparams=hyperparam_linFA)
+            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
+                                max_episodes=int(sys.argv[1]), policy=saved_policy,
+                                max_steps=8000, hyperparams=hyperparam_linFA)
     
-        except KeyError:
-            train_lunar_lander(env, render = True, log_interval = 1, max_episodes=int(sys.argv[1]), policy=linear_fa_policy, hyperparams=hyperparam_linFA)
+        except IndexError:
+            ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
+                                max_episodes=int(sys.argv[1]), policy=linear_fa_policy, 
+                                hyperparams=hyperparam_linFA)
     
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)
+        
+    save_results(hyperparam_linFA, ep_rewds, run_rewds)

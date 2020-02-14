@@ -76,7 +76,7 @@ class LinearFAPolicy(nn.Module):
         self.feature_size = (self.poly_degree+1)**self.state_size
         self.activation_func = hyperparam_dict['activation_function']
         self.sample_func = hyperparam_dict['sample_function']
-        self.sample_std = hyperparam_dict['sample_std']
+        self.sample_std = hyperparam_dict['sample_log_std']
         self.num_actions = hyperparam_dict['num_actions']
         
         self.affine1 =  nn.Linear(self.feature_size, self.num_actions)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     #feats = poly_feature(np.array([ 1.2303354,   1.5231776,   2.3200812,  -0.02065281,  0.23316315, -0.97967625,
   #0.28163096,  0.49523485]))
     for i in range(100):
-        feats = poly_feature_efficient(np.array([ 1.2303354,   1.5231776,   2.3200812,  -0.02065281,  0.23316315, -0.97967625,
+        feats = poly_feature(np.array([ 1.2303354,   1.5231776,   2.3200812,  -0.02065281,  0.23316315, -0.97967625,
   0.28163096,  0.49523485]),3)
     print(feats.shape)
     #linear_fa_policy = LinearFAPolicy(feats.shape[0], num_actions=2, activation_function=torch.tanh, 

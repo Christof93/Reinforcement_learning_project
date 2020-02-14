@@ -9,6 +9,7 @@ import numpy as np
 import sample_distribution
 import torch
 import datetime
+from matplotlib import pyplot as plt
  
 
 def make_observation(env):
@@ -28,8 +29,8 @@ def make_observation(env):
     for i in range(5):
        print(env.action_space.sample())
 
-def save_results(hyperparams, ep_rewards, running_rewards):
-    with open("results/"+str(datetime.datetime.now())[:-7]+"training_results.txt", "w") as outfile:
+def save_results(timestamp, hyperparams, ep_rewards, running_rewards):
+    with open("results/"+timestamp+"training_results.txt", "w") as outfile:
         hyperparams_string = ""
         for param,val in hyperparams.items():
             hyperparams_string+=param+" -> "+str(val)+"\n"
@@ -37,60 +38,57 @@ def save_results(hyperparams, ep_rewards, running_rewards):
         outfile.write("\nEpisode rewards:\n-------------\n")
         for i,(ep_rep, ru_rep) in enumerate(zip(ep_rewards, running_rewards)):
             outfile.write("Episode "+str(i)+" rewards: "+str(ep_rep)+"   "+ str(ru_rep)+"\n")
-            
-def save_plots(ep_rewards, running_rewards):
-    fig, ax = plt.subplots(3,1, figsize=(24,18))
-    ax[0].plot(range(len(ep_rewards)), ep_rewards, color='#b39bc8', lw=2, label='episode rewards')
-    ax[0].plot(range(len(running_rewards)), running_rewards, color='#a00000', lw=2, label='running rewards')
-    ax[0].set_xlabel('Episode')
-    ax[0].set_ylabel('Cumulative reward')
-    ax[0].set_title('Learned Agent', fontsize=16)
-    ax[0].legend()
-    ax[0].grid()
-    
-    ax[1].plot(range(len(random_ep_rewards)), random_ep_rewards, color='#7ed9d9', lw=2, label='episode rewards')
-    ax[1].plot(range(len(random_running_rewards)), random_running_rewards, color='#133264', lw=2, label='running rewards')
-    ax[1].set_xlabel('Episode')
-    ax[1].set_ylabel('Cumulative reward')
-    ax[1].set_title('Random Agent', fontsize=16)
-    ax[1].legend()
-    ax[1].grid()
-    
-    ax[2].plot(range(len(running_rewards)), running_rewards, color='#a00000', lw=2, label='learned agent running rewards')
-    ax[2].plot(range(len(random_running_rewards)), random_running_rewards, color='#133264', lw=2, label='random agent running rewards')
-    ax[2].set_xlabel('Episode')
-    ax[2].set_ylabel('Cumulative reward')
-    ax[2].set_title('Comparison between Learned and Random Agent', fontsize=16)
-    ax[2].legend()
-    ax[2].grid()
-    
-    plt.show()
-    
-def run_random_lander(env, num_episodes, policy_function):
-    """
-    runs the lunar lander environment for a specific number of episodes 
-    with a specified policy function.
-    """
-    rewards = []
 
-    for episode in range(num_episodes):
-        observation = env.reset()
-        episode_reward = 0
-        while True:
-            action = policy_function(env, observation)
-            observation, reward, done, info = env.step(action)
-            # You can comment the below line for faster execution
-            env.render()
-            episode_reward += reward
-            if done:
-                print('Episode: {} Reward: {}'.format(episode, episode_reward))
-                rewards.append(episode_reward)
-                break
-        print('Average reward: %.2f' % (sum(rewards) / len(rewards)))
+def make_plot(ax, title, ep_rewards, random_ep_rewards=[]):
+    ax.plot(range(len(ep_rewards)), ep_rewards, color='#a00000', lw=2, label='learned agent rewards')
+    ax.plot(range(len(random_ep_rewards)), random_ep_rewards, color='#133264', lw=2, label='random agent rewards')
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Cumulative reward')
+    ax.set_title(title, fontsize=24)
+    ax.legend()
+    ax.grid()
 
-    
-if __name__=="__main__":
+
+def task1(num_episodes):
     # Initialize the environment
+    env = gym.make('LunarLanderContinuous-v2')  
+    
+    # Define hyperparameters
+    state_size = env.observation_space.sample().shape[0]
+    num_actions = env.action_space.sample().shape[0]
+    hyperparam_linFA = {
+                        'name': 'linearFA', 'gamma':0.95, 'poly_degree':1, 
+                        'learning_rate':5e-3, 'state_size':state_size,
+                        'num_actions':num_actions, 'activation_function': torch.tanh,
+                        'sample_function': sample_distribution.gaussian_policy,
+                        'sample_log_std':-0.5
+                        }
+    # Set different seeds for reproducability
+    random_seeds = [1,2,3]
+    fig, ax = plt.subplots(3,1, figsize=(24,18))
+    
+    for i, random_seed in enumerate(random_seeds):
+        random.seed(random_seed)  
+        env.seed(random_seed)  
+        np.random.seed(random_seed)
+        
+        random_ep_rewds, random_run_rewds = random_agent.train_random_lander(env, num_episodes=num_episodes)
+
+        ## choose a policy
+        linear_fa_policy = linear_policy.linear_fa_policy(**hyperparam_linFA)
+
+        ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
+                        max_episodes=num_episodes, policy=linear_fa_policy, 
+                        hyperparams=hyperparam_linFA)
+        linear_fa_policy.save("models/LinearFAPolicy_seed"+str(random_seed)+".pt")
+        make_plot(ax[i], "seed "+str(random_seed), ep_rewds, random_ep_rewds)
+        time_now = str(datetime.datetime.now())[:-7].replace(" ","_")
+        save_results("task2_seed"+str(random_seed)+"_"+time_now, hyperparam_linFA, ep_rewds, run_rewds)
+        
+    plt.savefig("results/task2_"+time_now+".png")
+    
+def test_run():
+        # Initialize the environment
     env = gym.make('LunarLanderContinuous-v2')  
     
     # Define hyperparameters
@@ -111,9 +109,8 @@ if __name__=="__main__":
                         'sample_log_std':-2.0
                         }
 
-    random_policy = random_agent.get_action
     linear_fa_policy = linear_policy.linear_fa_policy(**hyperparam_linFA)
-    
+    fig, ax = plt.subplots(1,1, figsize=(24,10))
 
     if len(sys.argv) > 1:
         try:
@@ -130,5 +127,13 @@ if __name__=="__main__":
     
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)
-        
-    save_results(hyperparam_linFA, ep_rewds, run_rewds)
+    policy.save()
+    make_plot(ep_rewds, run_rewds)
+    time_now = str(datetime.datetime.now())[:-7].replace(" ","_")
+    save_results(time_now, hyperparam_linFA, ep_rewds, run_rewds)
+    plt.savefig("results/"+time_now+".png")
+    
+if __name__=="__main__":
+    if sys.argv[1] == "plot_task1":
+        task1(int(sys.argv[2]))
+    

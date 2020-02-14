@@ -15,22 +15,25 @@ def get_action(env, observation):
     
     return env.action_space.sample()
 
-if __name__=="__main__":
-    rewards = []
-    
-    for episode in range(NUM_EPISODES):
+def train_random_lander(env, num_episodes, render=False):
+    ep_rewards = list()
+    running_rewards = list()
+        
+    for episode in range(num_episodes):
         observation = env.reset()
         episode_reward = 0
         while True:
-            action = get_action(observation)
-            print(action)
-            print(type(action))
+            action = get_action(env, observation)
             observation, reward, done, info = env.step(action)
             # You can comment the below line for faster execution
-            env.render()
+            if render:
+                env.render()
             episode_reward += reward
             if done:
-                print('Episode: {} Reward: {}'.format(episode, episode_reward))
-                rewards.append(episode_reward)
+                #print('Episode: {} Reward: {}'.format(episode, episode_reward))
+                ep_rewards.append(episode_reward)
                 break
-    print('Average reward: %.2f' % (sum(rewards) / len(rewards)))
+    return ep_rewards, []
+    
+if __name__=="__main__":
+    print()

@@ -96,7 +96,7 @@ def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 10
         finish_episode(policy,optimizer,hyperparams['gamma'])
 
         if i_episode % log_interval == 0:
-            print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
+            print('Episode {}\tLast reward: {:.2f}\tRunning reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
         # Stopping criteria
         if running_reward > env.spec.reward_threshold:
@@ -106,5 +106,4 @@ def train_lunar_lander(env, policy, hyperparams, render=False, log_interval = 10
             print('Max episodes exceeded, quitting.')
             break
     # Save the trained policy network
-    policy.save()    
     return ep_rewards, running_rewards

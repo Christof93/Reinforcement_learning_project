@@ -77,18 +77,57 @@ def task1(num_episodes):
         ## choose a policy
         linear_fa_policy = linear_policy.linear_fa_policy(**hyperparam_linFA)
 
-        ep_rewds, run_rewds = train_lunar_lander(env, render = False, log_interval = 10, 
-                        max_episodes=num_episodes, policy=linear_fa_policy, 
-                        hyperparams=hyperparam_linFA)
+        ep_rewds, run_rewds = train_lunar_lander(env, policy=linear_fa_policy,
+                                                 hyperparams=hyperparam_linFA,
+                                                 feature_function=linear_policy.poly_feature,
+                                                 render = False, log_interval = 10,
+                                                 max_episodes=num_episodes)
         linear_fa_policy.save("models/LinearFAPolicy_seed"+str(random_seed)+".pt")
         make_plot(ax[i], "seed "+str(random_seed), ep_rewds, random_ep_rewds)
         time_now = str(datetime.datetime.now())[:-7].replace(" ","_")
-        save_results("task2_seed"+str(random_seed)+"_"+time_now, hyperparam_linFA, ep_rewds, run_rewds)
+        save_results("task1_seed"+str(random_seed)+"_"+time_now, hyperparam_linFA, ep_rewds, run_rewds)
         
-    plt.savefig("results/task2_"+time_now+".png")
+    plt.savefig("results/task1_"+time_now+".png")
     
 def task2(num_episodes):
-    return
+    # Initialize the environment
+    env = gym.make('LunarLanderContinuous-v2')
+
+    # Define hyperparameters
+    state_size = env.observation_space.sample().shape[0]
+    num_actions = env.action_space.sample().shape[0]
+    hyperparam_nn = {
+                    'name': 'nn', 'gamma':0.95, 'poly_degree':1,
+                    'learning_rate':5e-3, 'state_size':state_size,
+                    'num_actions':num_actions, 'activation_function': torch.tanh,
+                    'sample_function': sample_distribution.gaussian_policy,
+                    'sample_log_std':-0.5
+                   }
+    # Set different seeds for reproducability
+    random_seeds = [1,2,3]
+    fig, ax = plt.subplots(3,1, figsize=(24,18))
+
+    for i, random_seed in enumerate(random_seeds):
+        random.seed(random_seed)
+        env.seed(random_seed)
+        np.random.seed(random_seed)
+
+        random_ep_rewds, random_run_rewds = random_agent.train_random_lander(env, num_episodes=num_episodes)
+
+        ## choose a policy
+        nn_policy_instance = nn_policy.nn_policy_func(**hyperparam_nn)
+
+        ep_rewds, run_rewds = train_lunar_lander(env, policy=nn_policy_instance,
+                                                 hyperparams=hyperparam_nn,
+                                                 feature_function=nn_policy.dummy_feature,
+                                                 render = False, log_interval = 10,
+                                                 max_episodes=num_episodes)
+        nn_policy_instance.save("models/NN_seed"+str(random_seed)+".pt")
+        make_plot(ax[i], "seed "+str(random_seed), ep_rewds, random_ep_rewds)
+        time_now = str(datetime.datetime.now())[:-7].replace(" ","_")
+        save_results("task2_seed"+str(random_seed)+"_"+time_now, hyperparam_nn, ep_rewds, run_rewds)
+
+    plt.savefig("results/task2_"+time_now+".png")
     
 def test_run():
         # Initialize the environment
@@ -174,4 +213,6 @@ def test_run():
 if __name__=="__main__":
     if sys.argv[1] == "plot_task1":
         task1(int(sys.argv[2]))
+    elif sys.argv[1] == "plot_task2":
+        task2(int(sys.argv[2]))
     

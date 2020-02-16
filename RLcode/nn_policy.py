@@ -8,42 +8,6 @@ import torch.distributions as torch_dist
 import torch.nn.functional as F
 import torch.optim as optim
 
-
-# Function for initializing the parameters (weights and biases) of our neural network
-def init_model_deep(layer_units):
-    '''
-    Arguments:
-              layer_units: list containing the number of units in each layer
-                           For example, [5, 10,10,1] denotes a network with an
-                           input which is 5-dimensional, and has 2 hidden layers
-                           (10 units each) and 1 output layer with 1 unit.
-
-    Returns:
-              params:  python dictionary containing your parameters 'W1', 'b1',
-              ... , 'Wn', 'bn' where
-              Wl: weight matrix of shape (layer_units[l], layer_units[l-1])
-              bl: bias vector of shape (1, layer_units[l])
-
-    '''
-
-    # Calculate the total number of layers (input, hidden and output) in the network
-    L = len(layer_units)
-
-    # Initialize the parameters dictionary
-    parameters = dict()
-
-    # Initialize the weights and biases
-    for l in range(1, L):
-        parameters['W' + str(l)] = np.random.randn(layer_units[l], layer_units[l-1]) * 0.01
-        parameters['b' + str(l)] = np.ones((1, layer_units[l]))
-
-    # Verify the shapes of the weight matrices and bias vectors
-    for l in range(1, L):
-        assert(parameters['W' + str(l)].shape == (layer_units[l], layer_units[l-1]))
-        assert(parameters['b' + str(l)].shape == (1, layer_units[l]))
-
-    return parameters
-
 def dummy_feature(state, *_):
     return state
 

@@ -129,7 +129,7 @@ def task2(num_episodes):
 
     plt.savefig("results/task2_"+time_now+".png")
     
-def test_run():
+def test_run(num_episodes):
         # Initialize the environment
     env = gym.make('LunarLanderContinuous-v2')  
     
@@ -157,7 +157,7 @@ def test_run():
                         'learning_rate':5e-3, 'state_size':state_size,
                         'num_actions':num_actions, 'activation_function': torch.tanh,
                         'sample_function': sample_distribution.gaussian_policy,
-                        'sample_log_std':-2.0
+                        'sample_log_std':-0.5
                         }
 
     random_policy = random_agent.get_action
@@ -185,7 +185,7 @@ def test_run():
 
 
         try:
-            model_file = sys.argv[2]
+            model_file = sys.argv[3]
             saved_policy = nn_policy_instance.load(hyperparam_nn, model_file)
 
             ep_rewds, run_rewds = train_lunar_lander(env, policy=saved_policy,
@@ -200,12 +200,12 @@ def test_run():
                                                      hyperparams=hyperparam_nn,
                                                      feature_function=nn_policy.dummy_feature,
                                                      render = False, log_interval = 10,
-                                                     max_episodes=int(sys.argv[1]))
+                                                     max_episodes=num_episodes)
     
     else:
         run_random_lander(env, num_episodes=100, policy_function = random_policy)
-    policy.save()
-    make_plot(ep_rewds, run_rewds)
+    nn_policy_instance.save()
+    make_plot(ax, ep_rewds, run_rewds)
     time_now = str(datetime.datetime.now())[:-7].replace(" ","_")
     save_results(time_now, hyperparam_linFA, ep_rewds, run_rewds)
     plt.savefig("results/"+time_now+".png")
@@ -215,4 +215,6 @@ if __name__=="__main__":
         task1(int(sys.argv[2]))
     elif sys.argv[1] == "plot_task2":
         task2(int(sys.argv[2]))
+    elif sys.argv[1]=="test":
+        test_run(int(sys.argv[2]))
     
